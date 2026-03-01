@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperLista PRO+</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:20px;
+    background:#111827;
+    color:white;
+}
+
+h1{
+    text-align:center;
+}
+
+.card{
+    background:#1f2937;
+    padding:15px;
+    border-radius:15px;
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
+    background:#10b981;
+    color:white;
+    font-weight:bold;
+}
+
+.item{
+    background:#374151;
+    padding:10px;
+    border-radius:10px;
+    margin:5px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.tachado{
+    text-decoration:line-through;
+    opacity:0.5;
+}
+
+.small{
+    font-size:12px;
+    opacity:0.7;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🛒 SuperLista PRO+</h1>
+
+<div class="card">
+<input type="text" id="nombre" placeholder="Producto">
+<input type="number" id="precio" placeholder="Precio unitario">
+<input type="number" id="cantidad" placeholder="Cantidad">
+<button onclick="agregar()">Agregar</button>
+</div>
+
+<div class="card">
+<div id="lista"></div>
+
+<div>
+Total estimado: <span id="total"></span>
+</div>
+</div>
+
+<script>
+let productos = JSON.parse(localStorage.getItem("superlista_pro")) || [];
+
+function guardar(){
+    localStorage.setItem("superlista_pro", JSON.stringify(productos));
+}
+
+function render(){
+    const lista = document.getElementById("lista");
+    lista.innerHTML="";
+    let total=0;
+
+    productos.forEach((p,i)=>{
+        total += p.precio * p.cantidad;
+
+        const completado = p.comprado >= p.cantidad;
+
+        const div=document.createElement("div");
+        div.className="item"+(completado?" tachado":"");
+
+        div.innerHTML=`
+            <div onclick="marcar(${i})">
+                <strong>${p.nombre}</strong><br>
+                <span class="small">
+                ${p.comprado} / ${p.cantidad} comprados — 
+                ${p.precio.toFixed(2)} c/u
+                </span>
+            </div>
+            <button onclick="eliminar(${i})">X</button>
+        `;
+
+        lista.appendChild(div);
+    });
+
+    document.getElementById("total").textContent=total.toFixed(2);
+    guardar();
+}
+
+function agregar(){
+    const nombre=document.getElementById("nombre").value;
+    const precio=parseFloat(document.getElementById("precio").value);
+    const cantidad=parseInt(document.getElementById("cantidad").value);
+
+    if(!nombre || !precio || !cantidad) return;
+
+    productos.push({
+        nombre,
+        precio,
+        cantidad,
+        comprado:0
+    });
+
+    document.getElementById("nombre").value="";
+    document.getElementById("precio").value="";
+    document.getElementById("cantidad").value="";
+
+    render();
+}
+
+function marcar(i){
+    if(productos[i].comprado < productos[i].cantidad){
+        productos[i].comprado++;
+    } else {
+        productos[i].comprado = 0; // reinicia si ya estaba completo
+    }
+    render();
+}
+
+function eliminar(i){
+    productos.splice(i,1);
+    render();
+}
+
+render();
+</script>
+
+</body>
+</html>
